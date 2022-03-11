@@ -43,6 +43,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -75,20 +76,20 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -99,16 +100,49 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\fondo-DRS-v1.jpg" />
+    <None Include="Resources\LOGO_V2_USB_CONECTAR.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\fondo-DRS-v2.jpg" />
+    <None Include="Resources\LOGO_V2_ZOOM_MAS.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\boton_mas.png" />
+    <None Include="Resources\LOGO_V2_ZOOM_MENOS.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\boton_menos.png" />
+    <None Include="Resources\LOGO_V2_OBTENER_UBICACION.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_ELIMINAR_MARCADOR.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_NUEVO_MARCADOR.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_USB_DESCONECTAR.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_TRAZAR_RUTA.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_BORRAR_RUTA.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_BORRAR_RUTA1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_V2_MARKER_DRONE.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\circulo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MarkerDron.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_DRONE_FINAL_SOLO.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOGO_DRONE_FINAL_CON_FONDO.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

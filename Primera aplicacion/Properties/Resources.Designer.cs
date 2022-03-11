@@ -63,9 +63,9 @@ namespace Primera_aplicacion.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap boton_mas {
+        internal static System.Drawing.Bitmap LOGO_DRONE_FINAL_CON_FONDO {
             get {
-                object obj = ResourceManager.GetObject("boton_mas", resourceCulture);
+                object obj = ResourceManager.GetObject("LOGO_DRONE_FINAL_CON_FONDO", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace Primera_aplicacion.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap boton_menos {
+        internal static System.Drawing.Bitmap LOGO_DRONE_FINAL_SOLO {
             get {
-                object obj = ResourceManager.GetObject("boton_menos", resourceCulture);
+                object obj = ResourceManager.GetObject("LOGO_DRONE_FINAL_SOLO", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace Primera_aplicacion.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap fondo_DRS_v1 {
+        internal static System.Drawing.Bitmap LOGO_V2_BORRAR_RUTA {
             get {
-                object obj = ResourceManager.GetObject("fondo-DRS-v1", resourceCulture);
+                object obj = ResourceManager.GetObject("LOGO_V2_BORRAR_RUTA", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,89 @@ namespace Primera_aplicacion.Properties {
         /// <summary>
         ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap fondo_DRS_v2 {
+        internal static System.Drawing.Bitmap LOGO_V2_ELIMINAR_MARCADOR {
             get {
-                object obj = ResourceManager.GetObject("fondo-DRS-v2", resourceCulture);
+                object obj = ResourceManager.GetObject("LOGO_V2_ELIMINAR_MARCADOR", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_NUEVO_MARCADOR {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_NUEVO_MARCADOR", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_OBTENER_UBICACION {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_OBTENER_UBICACION", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_TRAZAR_RUTA {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_TRAZAR_RUTA", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_USB_CONECTAR {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_USB_CONECTAR", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_USB_DESCONECTAR {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_USB_DESCONECTAR", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_ZOOM_MAS {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_ZOOM_MAS", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap LOGO_V2_ZOOM_MENOS {
+            get {
+                object obj = ResourceManager.GetObject("LOGO_V2_ZOOM_MENOS", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Busca un recurso adaptado de tipo System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap MarkerDron {
+            get {
+                object obj = ResourceManager.GetObject("MarkerDron", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

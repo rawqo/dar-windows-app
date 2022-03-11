@@ -25,6 +25,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using System.IO;
+using System.IO.Ports;
+
 using GMap.NET;
 
 using GMap.NET.MapProviders;
@@ -36,15 +39,28 @@ namespace Primera_aplicacion
 {
     public partial class Form_Main : Form
     {
+        //Declaro los marcadores, la capa donde los voy a colocar y 
+        //una tabla de datos para almacenar posiciones
+        GMarkerGoogle markerDron;
         GMarkerGoogle marker;
         GMapOverlay markerOverlay;
         DataTable dt;
-        
+
+        public Boolean DronConectado = false;   //Variable booleana, sirve como verificacion para ciertos controles
 
         int fila_seleccionada;
+
+        //Declaracion de variables double que representan las coordenadas iniciales del mapa
         double LatInicial = -34.706845093052735;
         double LngInicial = -58.23879250387637;
-        int cont = 1;
+
+        //Simulacion de una ubicacion obtenida
+        double LatRecibida = -34.706845093052735;
+        double LngRecibida = -58.23879250387637;
+
+        int cont = 1;   //contador
+
+        
 
         //variables utilizadas para la creacion de poligonos
         List<PointLatLng> listaCirculo = new List<PointLatLng>();
@@ -55,13 +71,17 @@ namespace Primera_aplicacion
         Graphics Grafico;
         Bitmap ImagenBMP;
         Pen Lapiz;
-        GMapRoute ruta;
         //Capa para los marcadores creados desde el puerto serie
         //GMapOverlay overlaySerial;
 
         //Creo el objeto del Form de conexion con el XBee para poder acceder a sus parametros
         Form_Conexion Form_Conexion;
+
+        //Declaro un mapa de bits que representa a la imagen del marcador del dron
+        Bitmap MarkerDron_Imagen;
         
+        
+
         //contador para la descripcion de los datos recibidos por puerto serie
         //int contData = 1;
 
@@ -72,28 +92,35 @@ namespace Primera_aplicacion
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //inicializacion del mapa
+            //Junto ambas coordenadas de latitud y longitud en una variable, las cuales componen un punto
+            PointLatLng puntoInicial = new PointLatLng(LatInicial, LngInicial);
+            
+            //Inicializacion del Mapa
             gMapControl1.DragButton = MouseButtons.Left;
             gMapControl1.CanDragMap = true;
-            gMapControl1.MapProvider = GMapProviders.GoogleMap;
-            gMapControl1.Position = new PointLatLng(LatInicial, LngInicial);
+            gMapControl1.MapProvider = GMapProviders.GoogleMap; //Proovedor de servicios del mapa
+            gMapControl1.Position = puntoInicial;   //Posicion inicial del mapa
             gMapControl1.MinZoom = 0;
             gMapControl1.MaxZoom = 24;
             gMapControl1.Zoom = 18;
             gMapControl1.AutoScroll = true;
             gMapControl1.ShowCenter = true;        //Quita la cruz roja del medio del mapa
+
             ImagenBMP = new Bitmap(gMapControl1.Width, gMapControl1.Height);
             Grafico = Graphics.FromImage(ImagenBMP);
             Lapiz = new Pen(Color.Blue, 1);
-            //Marcador
+
+            //Marcador del Dron
+            MarkerDron_Imagen = (Bitmap)Primera_aplicacion.Properties.Resources.MarkerDron;
             markerOverlay = new GMapOverlay("Marcador"); //genera una capa por encima del mapa creado
-            marker = new GMarkerGoogle(new PointLatLng(LatInicial, LngInicial), GMarkerGoogleType.blue); //crea el marcador
-            markerOverlay.Markers.Add(marker);//Añadir al marcador
-            marker.Tag = "Ubicacion Inicial";
+            markerDron = new GMarkerGoogle(new PointLatLng(LatInicial, LngInicial), MarkerDron_Imagen); //crea el marcador
+            markerOverlay.Markers.Add(markerDron); //Añadir el marker del dron a la capa de dibujo de marcadores
+            markerDron.Tag = "Ubicacion Drone";
+            
 
             //Añadir un Tooltip (texto) al marcador
-            marker.ToolTipMode = MarkerTooltipMode.OnMouseOver; //el tooltip aparece cuando se le pone el mouse encima
-            marker.ToolTipText = "Ubicacion: Ubicacion Inicial \n Latitud: " + LatInicial + "\n Longitud: " + LngInicial;
+            markerDron.ToolTipMode = MarkerTooltipMode.OnMouseOver; //el tooltip aparece cuando se le pone el mouse encima
+            markerDron.ToolTipText = "Descripcion: Ubicacion Drone \n Latitud: " + LatInicial + "\n Longitud: " + LngInicial;
 
             //añadir el overlay al mapa principal
             gMapControl1.Overlays.Add(markerOverlay);
@@ -105,13 +132,18 @@ namespace Primera_aplicacion
             dt.Columns.Add(new DataColumn("Longitud", typeof(double)));
 
             //Agregar la primera fila y exhibir todo en la interfaz
-            dt.Rows.Add("Ubicacion Inicial", LatInicial, LngInicial);
+            dt.Rows.Add(markerDron.Tag, LatInicial, LngInicial);
             dataGridView1.DataSource = dt;
 
             //hacer invisible en la interfaz la latitud y la longitud
             dataGridView1.Columns[1].Visible = false;
             dataGridView1.Columns[2].Visible = false;
             dataGridView1.ReadOnly = true;
+
+            //Agrego los marcadores a los combobox para que se puedan seleccionar puntos de partida y destino
+            comboBox_Desde.Items.Add(dataGridView1.Rows[0].Cells[0].Value.ToString());
+            comboBox_Hacia.Items.Add(dataGridView1.Rows[0].Cells[0].Value.ToString());
+
         }
 
         private void Seleccionar_registro(object sender, DataGridViewCellMouseEventArgs e)
@@ -139,11 +171,11 @@ namespace Primera_aplicacion
             double lng = gMapControl1.FromLocalToLatLng(e.X, e.Y).Lng;
 
             //inicializar el marcador
-            marker = new GMarkerGoogle(new PointLatLng(lat, lng), GMarkerGoogleType.red);
+            marker = new GMarkerGoogle(new PointLatLng(lat, lng), GMarkerGoogleType.red_dot);
             markerOverlay.Markers.Add(marker);//Añadir al marcador
 
             //Añado los datos a los textbox
-            txtDescripcion.Text = "Ubicacion " + cont;
+            txtDescripcion.Text = "Waypoint " + cont;
             txtLatitud.Text = lat.ToString();
             txtLongitud.Text = lng.ToString();
             cont++;
@@ -155,7 +187,7 @@ namespace Primera_aplicacion
             marker.Position = new PointLatLng(lat, lng);
 
             //agregar el tooltip
-            marker.ToolTipText = "Ubicacion: " + txtDescripcion.Text + "\n Latitud: " + lat + "\n Longitud: " + lng;
+            marker.ToolTipText = "Descripcion: " + txtDescripcion.Text + "\n Latitud: " + lat + "\n Longitud: " + lng;
 
             //Agregarle un Tag al marker
             marker.Tag = txtDescripcion.Text;
@@ -164,30 +196,33 @@ namespace Primera_aplicacion
 
         private void btnAgregar_Click(object sender, EventArgs e)
         {
+            double lat = gMapControl1.FromLocalToLatLng(gMapControl1.Width / 2, gMapControl1.Height / 2).Lat;
+            double lng = gMapControl1.FromLocalToLatLng(gMapControl1.Width / 2, gMapControl1.Height / 2).Lng;
+
             string descripcion;
             if (txtDescripcion.Text != "")
                 descripcion = txtDescripcion.Text;
             else
-            { descripcion = "Ubicacion " + cont; cont++; }
+            { descripcion = "Waypoint " + cont; cont++; }
 
             if (txtLatitud.Text == "" || txtLongitud.Text == "")
             {
-                txtLatitud.Text = LatInicial.ToString();
-                txtLongitud.Text = LngInicial.ToString();
+                txtLatitud.Text = lat.ToString();
+                txtLongitud.Text = lng.ToString();
             }
             
             //Agregar los datos al dt
             dt.Rows.Add(descripcion, txtLatitud.Text, txtLongitud.Text);
 
             //Inicializar el marcador
-            marker = new GMarkerGoogle(new PointLatLng(Convert.ToDouble(txtLatitud.Text), Convert.ToDouble(txtLongitud.Text)), GMarkerGoogleType.red);
+            marker = new GMarkerGoogle(new PointLatLng(Convert.ToDouble(lat), Convert.ToDouble(lng)), GMarkerGoogleType.red_dot);
             markerOverlay.Markers.Add(marker);//Añadir al marcador
 
             //Colocar el marcador
-            marker.Position = new PointLatLng(Convert.ToDouble(txtLatitud.Text), Convert.ToDouble(txtLongitud.Text));
+            marker.Position = new PointLatLng(Convert.ToDouble(lat), Convert.ToDouble(lng));
 
             //agregar el tooltip
-            marker.ToolTipText = "Ubicacion: " + descripcion + "\n Latitud: " + txtLatitud.Text + "\n Longitud: " + txtLongitud.Text;
+            marker.ToolTipText = "Descripcion: " + descripcion + "\n Latitud: " + txtLatitud.Text + "\n Longitud: " + txtLongitud.Text;
 
             //centrar el mapa
             gMapControl1.Position = marker.Position;
@@ -201,8 +236,11 @@ namespace Primera_aplicacion
             try
             {
                 //Elimina la fila seleccionada en el dt y su marcador correspondiente
-                dataGridView1.Rows.RemoveAt(fila_seleccionada);
-                markerOverlay.Markers.RemoveAt(fila_seleccionada);
+                if (txtDescripcion.Text != "Ubicacion Drone")
+                {
+                    dataGridView1.Rows.RemoveAt(fila_seleccionada);
+                    markerOverlay.Markers.RemoveAt(fila_seleccionada);
+                }
             }
             catch (Exception ex)
             {
@@ -218,7 +256,7 @@ namespace Primera_aplicacion
             int fila = 0;
 
             //encuentra la fila en la que se ubica el marcador
-            for (int x = 0; dataGridView1.Rows[x].Cells[0].Value.ToString() != item.Tag.ToString(); x++) fila = x + 1;
+            for (int x = 0; dataGridView1.Rows[x].Cells[0].Value.ToString() != item.Tag.ToString(); x++) fila = x+1;
 
             //Deselecciona todas las filas del dt primero y luego selecciona la fila actual
             for (int i = 0; i != dataGridView1.RowCount; i++) dataGridView1.Rows[i].Selected = false;
@@ -228,6 +266,8 @@ namespace Primera_aplicacion
             txtDescripcion.Text = item.Tag.ToString();
             txtLatitud.Text = dataGridView1.Rows[fila].Cells[1].Value.ToString();
             txtLongitud.Text = dataGridView1.Rows[fila].Cells[2].Value.ToString();
+
+            gMapControl1.Position = new PointLatLng(lat, lng);
         }
 
         private void btn_Conexion_Click(object sender, EventArgs e)
@@ -237,6 +277,7 @@ namespace Primera_aplicacion
             Form_Conexion.Show(this);
         }
 
+       /* 
         private void btn_circle_Click(object sender, EventArgs e)
         {
             double radio = 1;
@@ -246,10 +287,10 @@ namespace Primera_aplicacion
             if (txt_dist.Text != "")
             {
                 distancia = Convert.ToInt16(txt_dist.Text);
-                /*
-                 * Haciendo calculos para convertir los valores de coordenadas a distancia en metros la unidad
-                 * de radio del circulo es de aproximadamente 89m
-                 */
+                
+                 // Haciendo calculos para convertir los valores de coordenadas a distancia en metros la unidad
+                 // de radio del circulo es de aproximadamente 89m
+         
                 radio = distancia / 89.0;
             }
             else
@@ -295,81 +336,24 @@ namespace Primera_aplicacion
 
             }
 
-            //Agrego un comentario
-
-
-            //Se crea el poligono Circulo
-            GMapPolygon circulo = new GMapPolygon(listaCirculo, "Circulo");
-            //Se agrega el circulo a la capa
-            layerCirculo.Polygons.Add(circulo);
-            //Se agrega la capa al mapa
-            gMapControl1.Overlays.Add(layerCirculo);
-            //Se actualiza el mapa
-            //gMapControl1.Refresh();
-            gMapControl1.Zoom++;
-            gMapControl1.Zoom--;
-
-            //Se limpia la lista para el proximo circulo
-            listaCirculo.Clear();            
-        }
-
-        private void btn_cricleBorrar_Click(object sender, EventArgs e)
+            /
+        */
+        public void enviarCoordenadas(string dato)
         {
-            layerCirculo.Polygons.Clear();
-            layerLineas.Routes.Clear();
+            //Si esta conectado, envia los datos de las textbox
+            if (DronConectado)
+            {
+                serialPort1.WriteLine(dato);
+
+            }
         }
-       
-        //public void reasignarData(double dataLat, double dataLng)
-        //{
-        //    /*
-        //     * Tuve problemas porque al ejecutar esta funcion, al principio tiraba error de
-        //     * "referencia a objeto no establecida como instancia de un objeto", con respecto al dataTable.
-        //     * Luego el problema pasaba porque la funcion se ejecutaba pero no ocurria nada. 
-        //     * Puse un breakpoint y al observar las variables, estas estaban bien asignadas pero no ocurrian
-        //     * cambios en el form.
-        //     */
-
-        //    //obtener los datos de lat y lng del lugat donde se hizo doble click
-
-        //    //Crear el punto recibido por serial
-        //    PointLatLng CoordSerial = new PointLatLng(dataLat,dataLng);
-
-        //    Form_Main formMain = new Form_Main();
-        //    //inicializar la capa
-        //    //formMain.markerOverlay = new GMapOverlay("MarcadorSerial"); //genera una capa por encima del mapa creado
-
-        //    //inicializar el marcador
-        //    formMain.marker = new GMarkerGoogle(CoordSerial, GMarkerGoogleType.red);
-        //    formMain.markerOverlay.Markers.Add(formMain.marker);//Añadir al marcador
-
-        //    //Añado los datos a los textbox
-        //    formMain.txtDescripcion.Text = "Ubicacion " + formMain.cont;
-        //    formMain.txtLatitud.Text = dataLat.ToString();
-        //    formMain.txtLongitud.Text = dataLng.ToString();
-        //    formMain.cont++;
-
-        //    //Añade la posicion seleccionada al dt
-        //    formMain.dt.Rows.Add(formMain.txtDescripcion.Text, formMain.txtLatitud.Text, formMain.txtLongitud.Text);
-
-        //    //Colocar el marcador
-        //    formMain.marker.Position = CoordSerial;
-
-        //    //agregar el tooltip
-        //    formMain.marker.ToolTipText = "Ubicacion: " + formMain.txtDescripcion.Text + "\n Latitud: " + dataLat + "\n Longitud: " + dataLng;
-
-        //    //Agregarle un Tag al marker
-        //    formMain.marker.Tag = formMain.txtDescripcion.Text;
-
-        //    formMain.gMapControl1.Refresh();
-
-        //}
 
         #region ComunicacionSerie
         public void coordenadasSerie(double dataLat, double dataLng)
         {
             PointLatLng CoordSerie = new PointLatLng(dataLat, dataLng);
 
-            marker = new GMarkerGoogle(CoordSerie, GMarkerGoogleType.red);
+            marker = new GMarkerGoogle(CoordSerie, GMarkerGoogleType.red_dot);
             marker.Tag = "Marcador Serie " + cont;
             marker.Position = CoordSerie;
 
@@ -377,7 +361,7 @@ namespace Primera_aplicacion
  
             gMapControl1.Position = marker.Position;
             
-            txtDescripcion.Text = "Ubicacion " + cont;
+            txtDescripcion.Text = "Waypoint " + cont;
             txtLatitud.Text = CoordSerie.Lat.ToString();
             txtLongitud.Text = CoordSerie.Lng.ToString();
 
@@ -402,13 +386,13 @@ namespace Primera_aplicacion
 
             //Marcador
             markerOverlay = new GMapOverlay("Marcador"); //genera una capa por encima del mapa creado
-            marker = new GMarkerGoogle(new PointLatLng(LatInicial, LngInicial), GMarkerGoogleType.blue); //crea el marcador
+            marker = new GMarkerGoogle(new PointLatLng(LatInicial, LngInicial), GMarkerGoogleType.lightblue_dot); //crea el marcador
             markerOverlay.Markers.Add(marker);//Añadir al marcador
             marker.Tag = "Ubicacion Inicial";
 
             //Añadir un Tooltip (texto) al marcador
             marker.ToolTipMode = MarkerTooltipMode.OnMouseOver; //el tooltip aparece cuando se le pone el mouse encima
-            marker.ToolTipText = "Ubicacion: Ubicacion Inicial \n Latitud: " + LatInicial + "\n Longitud: " + LngInicial;
+            marker.ToolTipText = "Descripcion: Ubicacion Inicial \n Latitud: " + LatInicial + "\n Longitud: " + LngInicial;
 
             //añadir el overlay al mapa principal
             gMapControl1.Overlays.Add(markerOverlay);
@@ -421,48 +405,26 @@ namespace Primera_aplicacion
             //PointLatLng coord = new PointLatLng(Convert.ToDouble(txtLatitud.Text), Convert.ToDouble(txtLongitud.Text));
             string dato = txtLatitud.Text + ";" + txtLongitud.Text;
 
-            Form_Conexion.enviarCoordenadas(dato);
-        }
-
-        private void txtDescripcion_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label5_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
+            enviarCoordenadas(dato);
+            textBox_SerialLog.Text = string.Format(textBox_SerialLog.Text + dato, Environment.NewLine);
         }
 
         private void btnTrazarLinea_Click(object sender, EventArgs e)
         {
 
-            
-                //Se crean los puntos variando el angulo y se los agrega a la lista
-                
-                PointLatLng puntoInicial = new PointLatLng(LatInicial,LngInicial);
-                PointLatLng puntoFinal = new PointLatLng(-34.706845093052735, -58.23890350387637);
+            PointLatLng puntoInicial = new PointLatLng(LatInicial, LngInicial);
+               // puntoInicial = comboBox_Desde.SelectedIndex;
+               // puntoFinal = comboBox_Hacia.SelectedIndex;
+            //PointLatLng puntoDestino = new PointLatLng()
 
-                
-                listaLinea.Add(puntoInicial);
-                listaLinea.Add(puntoFinal);
-
-            //Agrego un comentario
-
+            //listaLinea.Add(puntoDePartida);
+            //listaLinea.Add(puntoDestino);
+            listaLinea.Add(markerDron.Position);
+            listaLinea.Add(marker.Position);
                 
             //Se crea el poligono Circulo
             GMapRoute linea = new GMapRoute(listaLinea, "Linea");
-            linea.Stroke = new Pen(Color.Red, 3);
+            linea.Stroke = new Pen(Color.Salmon, 3);
             
             //Se agrega el circulo a la capa
             layerLineas.Routes.Add(linea);
@@ -487,9 +449,159 @@ namespace Primera_aplicacion
             gMapControl1.Zoom--;
         }
 
-        private void gMapControl1_Load(object sender, EventArgs e)
+        private void gMapControl1_OnMapDrag()
         {
-        
+            double lat = gMapControl1.FromLocalToLatLng(gMapControl1.Width / 2, gMapControl1.Height / 2).Lat;
+            double lng = gMapControl1.FromLocalToLatLng(gMapControl1.Width / 2, gMapControl1.Height / 2).Lng;
+            label_latitud.Text = "Latitud: " + lat;
+            label_longitud.Text = "Longitud: " + lng;
+
+            txtDescripcion.Text = "";
+            txtLatitud.Text = "";
+            txtLongitud.Text = "";
+
         }
+        
+        private void btnEliminarLinea_Click(object sender, EventArgs e)
+        {
+            layerLineas.Routes.Clear();
+        }
+
+        
+        private void btn_conectarDron_Click(object sender, EventArgs e)
+        {
+            if (!DronConectado)  //Si no esta conectado el puerto, realizar la conexión
+            {
+                try
+                {
+                    //Definir los parámetros de la comunicación serial 
+                    serialPort1.PortName = comboBox_ports.Text;
+                    serialPort1.BaudRate = 115200;
+                    serialPort1.Parity = Parity.None;
+                    serialPort1.DataBits = 8;
+                    serialPort1.StopBits = StopBits.One;
+                    serialPort1.Open();  //Abrir la conexión
+                    btn_conectarDron.BackgroundImage = Primera_aplicacion.Properties.Resources.LOGO_V2_USB_DESCONECTAR;
+                    label_status.Text = "Conectado en " + serialPort1.PortName;
+                    label_status.ForeColor = Color.ForestGreen;
+                    //label_status_colorpoint.ForeColor = Color.ForestGreen;
+                    DronConectado = true;
+                    textBox_SerialLog.Text = "Serial iniciado correctamente \n";
+                }
+                catch (Exception ex)   // Código de error
+                {
+                    MessageBox.Show("Error en la conexión: " + ex.Message);
+                    serialPort1.Close(); //Cerrar la conexión
+                }
+            }
+            else   //Cerrar conexión.
+            {
+                //label_status_colorpoint.ForeColor = Color.Red;
+                label_status.ForeColor = Color.Red;
+                label_status.Text = "Desconectado";
+                DronConectado = false;
+                btn_conectarDron.BackgroundImage = Primera_aplicacion.Properties.Resources.LOGO_V2_USB_CONECTAR;    
+                if (serialPort1 != null)
+                    serialPort1.Close();
+            }
+ 
+        }
+
+        private void btnObtenerUbicacion_Click(object sender, EventArgs e)
+        {
+            // Se utilizan las coordenadas recibidas por el modulo gps
+            // para determinar la posicion del dron y ajustarla
+             
+            LatRecibida = -34.707345093052735;
+            LngRecibida = -58.23879250387637;
+            markerDron.Position = new PointLatLng(LatRecibida,LngRecibida);
+
+        }
+
+        private void Serial_enviarCMD_Click(object sender, EventArgs e)
+        {
+            if (DronConectado)
+            {
+                //serialPort1.Write(textBox_enviarCMD.Text);  //Descomentar para enviar el comando
+                textBox_SerialLog.Text = textBox_SerialLog.Text + "\r\n>>> " + textBox_enviarCMD.Text;
+                serialPort1.Write(textBox_enviarCMD.Text);
+            }
+        }
+
+        /*
+        private void textBox_SerialLog_Enter(object sender, EventArgs e)
+        {
+            textBox_SerialLog.Text = ">>> ";
+        }
+        */
+
+        private void comboBox_Desde_Click(object sender, EventArgs e)
+        {
+            comboBox_Desde.Items.Clear();
+            for (int conpoints = 0; conpoints < dataGridView1.RowCount; conpoints++)
+            {
+                comboBox_Desde.Items.Add(dataGridView1.Rows[conpoints].Cells[0].Value.ToString());
+            }
+            
+        }
+
+        private void comboBox_Hacia_Click(object sender, EventArgs e)
+        {
+            
+            comboBox_Hacia.Items.Clear();
+            for (int conpoints = 0; conpoints < dataGridView1.RowCount; conpoints++)
+            {
+                comboBox_Hacia.Items.Add(dataGridView1.Rows[conpoints].Cells[0].Value.ToString());
+            }
+             
+        }
+
+        private void gMapControl1_MouseEnter(object sender, EventArgs e)
+        {
+            label_consejo.Text = "Consejo: Puede agregar un marcador haciendo doble click donde desea agregarlo en el mapa";
+        }
+
+        private void gMapControl1_MouseLeave(object sender, EventArgs e)
+        {
+            label_consejo.Text = "";
+        }
+
+        private void btnObtenerUbicacion_MouseEnter(object sender, EventArgs e)
+        {
+            label_consejo.Text = "Descripcion: Permite obtener la ubicacion actual del dron si se encuentra conectado";
+        }
+
+        private void btnObtenerUbicacion_MouseLeave(object sender, EventArgs e)
+        {
+            label_consejo.Text = "";
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            
+            //textBox_SerialLog.Text = textBox_SerialLog.Text + "\r\n" + serialPort1.ReadExisting();
+            serialPort1.ReadExisting();
+        }
+
+        private void panel3_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void label10_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label_longitud_Click(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }

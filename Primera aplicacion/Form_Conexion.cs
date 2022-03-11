@@ -71,18 +71,20 @@ namespace Primera_aplicacion
                     serialPort1.DataBits = 8;
                     serialPort1.StopBits = StopBits.One;
                     serialPort1.Open();  //Abrir la conexión
-                    lbl_Conectar.Text = "Status: Conectado";
+                    lbl_Conectar.Text = "Estado: Conectado";
+                    btn_Conectar.Text = "Desconectar";
                     conectado = true;
                 }
                 catch (Exception ex)   // Código de error
                 {
-                    MessageBox.Show("Error en la conexión " + ex.Message);
+                    MessageBox.Show("Error en la conexión: " + ex.Message);
                     serialPort1.Close(); //Cerrar la conexión
                 }
             }
             else   //Cerrar conexión.
             {
-                lbl_Conectar.Text = "Status: Desconectado";
+                lbl_Conectar.Text = "Estado: Desconectado";
+                btn_Conectar.Text = "Conectar";
                 conectado = false;
                 if (serialPort1 != null)
                     serialPort1.Close();
@@ -211,7 +213,36 @@ namespace Primera_aplicacion
         public void enviarCoordenadas(string dato)
         {
             //Si esta conectado, envia los datos de las textbox
-            if (conectado) serialPort1.WriteLine(dato);
+            if (conectado)
+            {
+                serialPort1.WriteLine(dato);
+            }
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            string datos = "";
+
+            if (this.InvokeRequired)
+            {
+                NuevoDato ND = new NuevoDato(recibirDatos);
+                //Ejecuta un delegado en el subproceso que posee el identificador de ventana subyacente del control.
+                this.Invoke(ND);
+            }
+            else
+            {
+                datos = Convert.ToString(serialPort1.ReadExisting());
+            }
+        }
+
+        private void lbl_Conectar_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
